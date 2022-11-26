@@ -21,6 +21,7 @@ async function run() {
     const categoriesCollection = client.db('laptobZone').collection('categories')
     const productsCollection = client.db('laptobZone').collection('products')
     const buyCollection = client.db('laptobZone').collection('buy')
+    const usersCollection = client.db('laptobZone').collection('user')
 
     app.get('/categories', async(req, res) => {
       const query = {}
@@ -48,7 +49,6 @@ async function run() {
     // my orders
     app.get('/buy', async(req, res) => {
       const email = req.query.email;
-      console.log(email)
       const query = {email: email};
       const result = await buyCollection.find(query).toArray();
       res.send(result)
@@ -61,6 +61,12 @@ async function run() {
       res.send(result)
     })
 
+    // user collection
+    app.post('/users', async(req, res) => {
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result)
+    })
 
   }
 
