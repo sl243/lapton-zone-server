@@ -63,6 +63,13 @@ async function run() {
       res.send(products)
     })
 
+    // products
+    app.get('/products', async(req, res) => {
+      const query = {};
+      const result = await productsCollection.find(query).toArray();
+      res.send(result)
+    })
+
     // my orders
     app.get('/buy',  async (req, res) => {
       const email = req.query.email;
@@ -129,6 +136,13 @@ async function run() {
       res.send(result)
   })
 
+  // products post database
+  app.post('/products', async(req, res) => {
+    const product = req.body;
+    const result = await productsCollection.insertOne(product);
+    res.send(result);
+  })
+
     // user product buy
     app.post('/buy', async (req, res) => {
       const buy = req.body;
@@ -141,6 +155,14 @@ async function run() {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result)
+    })
+
+    // user delete
+    app.delete('/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: ObjectId(id)};
+      const result = await usersCollection.deleteOne(filter);
+      
     })
 
   }
