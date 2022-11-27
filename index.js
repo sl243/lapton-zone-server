@@ -64,14 +64,8 @@ async function run() {
     })
 
     // my orders
-    app.get('/buy', verifyJWT, async (req, res) => {
+    app.get('/buy',  async (req, res) => {
       const email = req.query.email;
-      const decodedEmail = req.decoded.email;
-
-      if (email !== decodedEmail) {
-        return res.status(403).send({ message: 'Forbidden Access' })
-      }
-
       const query = { email: email };
       const result = await buyCollection.find(query).toArray();
       res.send(result)
@@ -105,6 +99,14 @@ async function run() {
       res.send({isAdmin: user?.role === 'admin'});
     })
 
+    // seller role
+    app.get('/users/seller/:email', async(req, res) => {
+      const email = req.params.email;
+      const query = {email};
+      const user = await usersCollection.findOne(query);
+      res.send({isAdmin: user?.buyerSeller === 'seller'});
+    })
+
     // user update make a admin
     app.put('/users/admin/:id', verifyJWT, async (req, res) => {
       const decodedEmail = req.decoded.email;
@@ -112,7 +114,7 @@ async function run() {
       const user = await usersCollection.findOne(query);
 
       if(user?.role !== 'admin') {
-        return res.status(401).send({message: 'unauthorized access'})
+        return res.status(403).send({message: 'forbidden access'})
       }
 
       const id = req.params.id;
