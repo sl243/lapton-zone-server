@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
+const stripe = require("stripe")(process.env.STRIPE_SECRIT_KEY);
+
 const app = express()
 const port = process.env.PORT || 5000
 
@@ -38,6 +40,7 @@ async function run() {
     const productsCollection = client.db('laptobZone').collection('products')
     const buyCollection = client.db('laptobZone').collection('buy')
     const usersCollection = client.db('laptobZone').collection('user')
+    const paymentsCollection = client.db('laptobZone').collection('payments')
 
     app.get('/categories', async (req, res) => {
       const query = {}
@@ -65,7 +68,8 @@ async function run() {
 
     // products
     app.get('/products', async(req, res) => {
-      const query = {};
+      const email = req.query.email;
+      const query = { email: email };
       const result = await productsCollection.find(query).toArray();
       res.send(result)
     })
@@ -75,6 +79,14 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const result = await buyCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    // user order payment
+    app.get('/buy/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const result = await buyCollection.findOne(query);
       res.send(result)
     })
 
@@ -136,6 +148,42 @@ async function run() {
       res.send(result)
   })
 
+  // Payment Method
+  app.post('/create-payment-intent', async (req, res) => {
+    const order = req.body;
+    const price = order.price;
+    const amount = price * 100;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+        currency: 'usd',
+        amount: amount,
+        "payment_method_types": [
+            "card"
+        ]
+    })
+    res.send({
+        clientSecret: paymentIntent.client_secret,
+    });
+})
+
+
+// customer payment store in the database
+app.post('/payments', async(req, res) => {
+  const payment = req.body;
+  const result = await paymentsCollection.insertOne(payment);
+
+  const id = payment.orderId;
+  const filter = {_id: ObjectId(id)}
+  const updatedDoc= {
+      $set: {
+          paid: true,
+          transactionId: payment.transactionId
+      }
+  }
+  const updatedResult = await buyCollection.updateOne(filter, updatedDoc)
+  res.send(result);
+})
+
   // products post database
   app.post('/products', async(req, res) => {
     const product = req.body;
@@ -151,18 +199,19 @@ async function run() {
     })
 
     // user collection
-    app.post('/users', async (req, res) => {
+    app.post('/users', verifyJWT, async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result)
     })
 
+
     // user delete
-    app.delete('/users/:id', async (req, res) => {
+    app.delete('/users/:id', verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = {_id: ObjectId(id)};
       const result = await usersCollection.deleteOne(filter);
-      
+      res.send(result)
     })
 
   }
