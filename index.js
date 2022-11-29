@@ -109,6 +109,14 @@ async function run() {
       res.send(user)
     })
 
+    // Seller display in website
+    app.get('/sellers', async (req, res) => {
+      const  buyerSeller = req.query.buyerSeller;
+      const query = {buyerSeller: buyerSeller}
+      const result = await usersCollection.find(query).toArray()
+      res.send(result)
+    })
+
     // admin role
     app.get('/users/admin/:email', async(req, res) => {
       const email = req.params.email;
