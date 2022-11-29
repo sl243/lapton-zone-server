@@ -90,17 +90,17 @@ async function run() {
     })
 
     // JWT TOKEN
-    app.get('/jwt', async (req, res) => {
-      const email = req.query.email;
-      const query = { email: email };
-      const user = await usersCollection.findOne(query);
+    // app.get('/jwt', async (req, res) => {
+    //   const email = req.query.email;
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
 
-      if (user) {
-        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
-        return res.send({ accessToken: token });
-      }
-      res.status(403).send({ accessToken: '' })
-    })
+    //   if (user) {
+    //     const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
+    //     return res.send({ accessToken: token });
+    //   }
+    //   res.status(403).send({ accessToken: '' })
+    // })
 
     // user display in website
     app.get('/users', async (req, res) => {
@@ -117,20 +117,28 @@ async function run() {
       res.send(result)
     })
 
-    // admin role
-    app.get('/users/admin/:email', async(req, res) => {
-      const email = req.params.email;
-      const query = {email};
-      const user = await usersCollection.findOne(query);
-      res.send({isAdmin: user?.role === 'admin'});
+    // Seller display in website
+    app.get('/buyers', async (req, res) => {
+      const  buyerSeller = req.query.buyerSeller;
+      const query = {buyerSeller: buyerSeller}
+      const result = await usersCollection.find(query).toArray()
+      res.send(result)
     })
+
     // admin role
     // app.get('/users/admin/:email', async(req, res) => {
     //   const email = req.params.email;
     //   const query = {email};
     //   const user = await usersCollection.findOne(query);
-    //   res.send({isAdmin: user?.buyerSeller === 'admin'});
+    //   res.send({isAdmin: user?.role === 'admin'});
     // })
+    // admin role
+    app.get('/users/admin/:email', async(req, res) => {
+      const email = req.params.email;
+      const query = {email};
+      const user = await usersCollection.findOne(query);
+      res.send({isAdmin: user?.buyerSeller === 'admin'});
+    })
 
     // seller role
     app.get('/users/seller/:email', async(req, res) => {
@@ -139,12 +147,28 @@ async function run() {
       const user = await usersCollection.findOne(query);
       res.send({isSeller: user?.buyerSeller === 'seller'});
     })
+
+    // seller delete
+    app.delete('/users/seller/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: ObjectId(id)};
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result)
+    })
     // buyer role
     app.get('/users/buyer/:email', async(req, res) => {
       const email = req.params.email;
       const query = {email};
       const user = await usersCollection.findOne(query);
       res.send({isBuyer: user?.buyerSeller === 'buyer'});
+    })
+
+    // seller delete
+    app.delete('/users/buyer/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: ObjectId(id)};
+      const result = await usersCollection.deleteOne(filter);
+      res.send(result)
     })
 
     // user update make a admin
@@ -220,7 +244,7 @@ app.post('/payments', async(req, res) => {
     })
 
     // user collection
-    app.post('/users', verifyJWT, async (req, res) => {
+    app.post('/users', async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result)
