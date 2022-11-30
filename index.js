@@ -50,20 +50,12 @@ async function run() {
 
 
     // // categories:id 
-    app.get('/products/:categoryName', async(req, res) => {
+    app.get('/categoryProduct/:id', async(req, res) => {
       const id = req.params.id;
       const query = {categoryName: id}
       const result = await productsCollection.find(query).toArray();
       res.send(result)
     })
-
-    // categories:id 
-    // app.get('/categories/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   const query = { category_id: id }
-    //   const products = await categoriesCollection.find(query).toArray();
-    //   res.send(products)
-    // })
 
     // products
     app.get('/products', async(req, res) => {
@@ -90,17 +82,17 @@ async function run() {
     })
 
     // JWT TOKEN
-    // app.get('/jwt', async (req, res) => {
-    //   const email = req.query.email;
-    //   const query = { email: email };
-    //   const user = await usersCollection.findOne(query);
+    app.get('/jwt', async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
 
-    //   if (user) {
-    //     const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
-    //     return res.send({ accessToken: token });
-    //   }
-    //   res.status(403).send({ accessToken: '' })
-    // })
+      if (user) {
+        const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
+        return res.send({ accessToken: token });
+      }
+      res.status(403).send({ accessToken: '' })
+    })
 
     // user display in website
     app.get('/users', async (req, res) => {
@@ -125,13 +117,6 @@ async function run() {
       res.send(result)
     })
 
-    // admin role
-    // app.get('/users/admin/:email', async(req, res) => {
-    //   const email = req.params.email;
-    //   const query = {email};
-    //   const user = await usersCollection.findOne(query);
-    //   res.send({isAdmin: user?.role === 'admin'});
-    // })
     // admin role
     app.get('/users/admin/:email', async(req, res) => {
       const email = req.params.email;
